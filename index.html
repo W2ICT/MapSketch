@@ -777,6 +777,15 @@ dt{color:var(--muted)}dd{margin:0;text-align:right;font-variant-numeric:tabular-
 #list .dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 0 1px var(--line)}
 #list .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #list .ic{width:18px;height:18px;color:var(--muted)}
+#list .li-grip{flex:none;width:18px;height:18px;padding:0;border:0;background:none;color:var(--muted);opacity:.45;cursor:grab;display:grid;place-items:center;touch-action:none}
+#list .li-grip:hover{opacity:.85}
+#list .li-lock{flex:none;width:22px;height:22px;padding:0;border:0;background:none;color:var(--muted);opacity:.4;cursor:pointer;display:grid;place-items:center}
+#list .li-lock:hover{opacity:.8}
+#list .li-lock.on{color:var(--accent);opacity:1}
+#list .li-lock .ic{width:15px;height:15px}
+#list li.dragging{opacity:.4}
+#list li.drop-before{box-shadow:inset 0 2px 0 var(--accent)}
+#list li.drop-after{box-shadow:inset 0 -2px 0 var(--accent)}
 
 /* toast + drop */
 #toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-b));transform:translate(-50%,20px);background:#111;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:3000;max-width:90vw}
@@ -795,6 +804,8 @@ dt{color:var(--muted)}dd{margin:0;text-align:right;font-variant-numeric:tabular-
 .leaflet-control-scale-line{background:var(--bg);color:var(--fg);border-color:var(--fg);font-size:11px;border-radius:0 0 4px 4px}
 .coord-box{background:var(--bg);color:var(--fg);padding:3px 9px;border-radius:8px;font:11.5px ui-monospace,Consolas,monospace;backdrop-filter:blur(8px);border:1px solid var(--line);margin-bottom:6px!important}
 .leaflet-container.tool-text{cursor:crosshair}
+/* กำลังใช้เครื่องมือ (ไม่ใช่โหมดเลือก/เลื่อนแผนที่) → ลูกศรปกติ ไม่ใช่มือจับ จะได้คลิกวาดง่าย */
+.leaflet-container.tool-active,.leaflet-container.tool-active .leaflet-interactive,.leaflet-container.tool-active.leaflet-grab,.leaflet-container.tool-active .leaflet-grab{cursor:default!important}
 .leaflet-container.rotating,.leaflet-container.rotating *{cursor:ew-resize!important}
 /* ย้าย/ปรับขนาดวัตถุที่เลือก */
 #xform{position:absolute;inset:0;pointer-events:none;z-index:650}
@@ -906,10 +917,19 @@ dt{color:var(--muted)}dd{margin:0;text-align:right;font-variant-numeric:tabular-
 
 /* markers & labels */
 .pin{filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
-.leaflet-marker-icon.sel{filter:drop-shadow(0 0 1.5px var(--accent))}
-path.leaflet-interactive.sel{filter:drop-shadow(0 0 1px var(--accent))}
+.leaflet-marker-icon.sel{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 3px var(--accent)) drop-shadow(0 0 7px var(--accent))}
+path.leaflet-interactive.sel{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 2.5px var(--accent)) drop-shadow(0 0 6px var(--accent))}
+.leaflet-marker-icon.boxhit{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 4px var(--accent))}
+path.leaflet-interactive.boxhit{filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 3px var(--accent))}
 .txt-icon{background:none;border:0}
-.txt-icon span{position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:pre;font-weight:650;line-height:1.15;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 5px #fff,0 0 2px #fff;cursor:pointer}
+.txt-icon span{position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:pre;font-weight:650;line-height:1.15;text-shadow:-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000,0 0 4px rgba(0,0,0,.85);cursor:pointer}
+.col-num{background:none;border:0}
+.col-num span{position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-weight:800;font-family:ui-monospace,Consolas,monospace;color:#fff;text-shadow:-1.5px -1.5px 0 #000,1.5px -1.5px 0 #000,-1.5px 1.5px 0 #000,1.5px 1.5px 0 #000,0 0 4px rgba(0,0,0,.85);pointer-events:none;white-space:nowrap}
+.box-sel{position:absolute;border:1.5px dashed var(--accent);background:rgba(37,99,235,.12);pointer-events:none;z-index:640}
+.snap-guide{position:absolute;background:#f43f5e;pointer-events:none;z-index:660}
+.snap-guide.h{height:1px}
+.snap-guide.v{width:1px}
+.box-sel span{position:absolute;right:4px;top:-11px;background:var(--accent);color:var(--on-accent);font:600 11.5px ui-monospace,Consolas,monospace;padding:2px 7px;border-radius:7px;white-space:nowrap}
 .nm-tip{background:var(--bg);color:var(--fg);border:1px solid var(--line);box-shadow:none;font-size:12px;padding:2px 7px;border-radius:7px}
 .nm-tip::before{display:none}
 
@@ -941,6 +961,7 @@ path.leaflet-interactive.sel{filter:drop-shadow(0 0 1px var(--accent))}
     <symbol id="i-magnet" viewBox="0 0 24 24"><path d="M6 3v8a6 6 0 0012 0V3h-4v8a2 2 0 01-4 0V3zM6 7h4M14 7h4"/></symbol>
     <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 3l4 4-4 4M3 11V9a2 2 0 012-2h16M7 21l-4-4 4-4M21 13v2a2 2 0 01-2 2H3"/></symbol>
     <symbol id="i-grid" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 9.3h16M4 14.7h16M9.3 4v16M14.7 4v16"/></symbol>
+    <symbol id="i-colgrid" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8.8 4v16M13.6 4v16M18.4 4v16"/></symbol>
     <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></symbol>
     <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3"/></symbol>
@@ -960,6 +981,14 @@ path.leaflet-interactive.sel{filter:drop-shadow(0 0 1px var(--accent))}
     <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
     <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1"/></symbol>
     <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+    <symbol id="i-front" viewBox="0 0 24 24"><rect x="3" y="3" width="12" height="12" rx="1.5" opacity=".4"/><rect x="9" y="9" width="12" height="12" rx="1.5"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="1.5" opacity=".4"/><rect x="3" y="3" width="12" height="12" rx="1.5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></symbol>
+    <symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 017.5-2"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.6" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="9" cy="18" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1.6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-boxsel" viewBox="0 0 24 24"><path d="M4 4h4M16 4h4M4 4v4M20 4v4M4 16v4M20 16v4M4 20h4M16 20h4" stroke-linecap="round"/><circle cx="9" cy="9" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.6" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-group" viewBox="0 0 24 24"><rect x="3" y="3" width="9" height="9" rx="1"/><rect x="12" y="12" width="9" height="9" rx="1"/></symbol>
+    <symbol id="i-ungroup" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/><path d="M11 7h2M7 11v2" stroke-dasharray="2 2"/></symbol>
   </defs>
 </svg>
 
@@ -1039,7 +1068,7 @@ path.leaflet-interactive.sel{filter:drop-shadow(0 0 1px var(--accent))}
     <div class="hd"><div id="selTitle">สไตล์เริ่มต้น</div><div id="selKind" class="muted">ใช้กับวัตถุที่วาดใหม่</div></div>
 
     <label class="fld" data-sel-only><span id="lbl-name">ชื่อ</span><input id="f-name" type="text"></label>
-    <label class="fld" data-sel-only data-kinds="marker line grid polygon rectangle circle"><span>คำอธิบาย</span><textarea id="f-desc" rows="3"></textarea></label>
+    <label class="fld" data-sel-only data-kinds="marker line grid colgrid polygon rectangle circle"><span>คำอธิบาย</span><textarea id="f-desc" rows="3"></textarea></label>
 
     <div class="fld"><span>สี</span>
       <div class="swatches" id="swatches"></div>
@@ -1048,11 +1077,18 @@ path.leaflet-interactive.sel{filter:drop-shadow(0 0 1px var(--accent))}
       <input id="f-cell" type="number" min="0.1" step="10" inputmode="decimal" style="width:100%;border:1px solid var(--line);background:var(--solid);color:var(--fg);border-radius:9px;padding:9px 10px;font:inherit;font-size:14px;margin-bottom:8px">
       <div class="chips" id="f-cell-chips" style="padding:0"></div>
     </div>
-    <label class="fld rng" data-kinds="text"><span>ขนาดตัวอักษร</span><input id="f-size" type="range" min="10" max="48" step="1"><output></output></label>
-    <label class="fld rng" data-kinds="line grid polygon rectangle circle"><span>ความหนาเส้น</span><input id="f-weight" type="range" min="1" max="14" step="0.5"><output></output></label>
-    <label class="fld rng" data-kinds="line grid polygon rectangle circle"><span>ความทึบเส้น</span><input id="f-opacity" type="range" min="0.1" max="1" step="0.05"><output></output></label>
+    <div class="fld" data-kinds="colgrid"><span>จำนวนคอลัมน์</span>
+      <input id="f-cols" type="number" min="1" max="200" step="1" inputmode="numeric" style="width:100%;border:1px solid var(--line);background:var(--solid);color:var(--fg);border-radius:9px;padding:9px 10px;font:inherit;font-size:14px;margin-bottom:8px">
+      <div class="chips" id="f-cols-chips" style="padding:0"></div>
+    </div>
+    <div class="fld" data-kinds="colgrid"><span>ทิศทางนับเลข</span>
+      <div class="seg" id="f-dir"><button data-v="ltr">ซ้าย → ขวา</button><button data-v="rtl">ขวา → ซ้าย</button></div>
+    </div>
+    <label class="fld rng" data-kinds="text colgrid"><span>ขนาดตัวอักษร</span><input id="f-size" type="range" min="10" max="48" step="1"><output></output></label>
+    <label class="fld rng" data-kinds="line grid colgrid polygon rectangle circle"><span>ความหนาเส้น</span><input id="f-weight" type="range" min="1" max="14" step="0.5"><output></output></label>
+    <label class="fld rng" data-kinds="line grid colgrid polygon rectangle circle"><span>ความทึบเส้น</span><input id="f-opacity" type="range" min="0.1" max="1" step="0.05"><output></output></label>
     <label class="fld rng" data-kinds="polygon rectangle circle"><span>ความทึบพื้นที่</span><input id="f-fill" type="range" min="0" max="1" step="0.05"><output></output></label>
-    <div class="fld" data-kinds="line grid polygon rectangle circle"><span>ลายเส้น</span>
+    <div class="fld" data-kinds="line grid colgrid polygon rectangle circle"><span>ลายเส้น</span>
       <div class="seg" id="f-dash">
         <button data-v="">ทึบ</button><button data-v="10 8">ประ</button><button data-v="2 7">จุด</button>
       </div>
@@ -1079,6 +1115,9 @@ path.leaflet-interactive.sel{filter:drop-shadow(0 0 1px var(--accent))}
       <button class="btn txt" id="a-dup"><svg class="ic"><use href="#i-copy"/></svg>ทำสำเนา</button>
       <button class="btn txt" id="a-copy"><svg class="ic"><use href="#i-copy"/></svg>คัดลอก</button>
       <button class="btn txt" id="a-paste" disabled><svg class="ic"><use href="#i-paste"/></svg>วาง</button>
+      <button class="btn txt" id="a-front"><svg class="ic"><use href="#i-front"/></svg>เอาไว้หน้าสุด</button>
+      <button class="btn txt" id="a-back"><svg class="ic"><use href="#i-back"/></svg>เอาไว้หลังสุด</button>
+      <button class="btn txt" id="a-lock"><svg class="ic"><use href="#i-lock"/></svg>ล็อก</button>
       <button class="btn txt danger" id="a-del"><svg class="ic"><use href="#i-trash"/></svg>ลบ</button>
     </div>
 
@@ -1087,6 +1126,7 @@ path.leaflet-interactive.sel{filter:drop-shadow(0 0 1px var(--accent))}
       <div class="alignrow"><button data-al="left">ชิดซ้าย</button><button data-al="hc">กึ่งกลาง ↔</button><button data-al="right">ชิดขวา</button></div>
       <div class="alignrow"><button data-al="top">ชิดบน</button><button data-al="vc">กึ่งกลาง ↕</button><button data-al="bottom">ชิดล่าง</button></div>
       <div class="alignrow"><button data-al="dh">กระจายแนวนอน</button><button data-al="dv">กระจายแนวตั้ง</button></div>
+      <div class="actions"><button class="btn txt" id="mb-group"><svg class="ic"><use href="#i-group"/></svg>รวมกลุ่ม</button><button class="btn txt" id="mb-ungroup" hidden><svg class="ic"><use href="#i-ungroup"/></svg>แยกกรุ๊ป</button></div>
       <div class="actions"><button class="btn txt" id="mb-clear">ยกเลิกเลือก</button><button class="btn txt danger" id="mb-del">ลบทั้งหมด</button></div>
     </div>
   </section>
@@ -1176,8 +1216,8 @@ function toast(msg, ms = 2600) {
 }
 
 /* ───────────── state ───────────── */
-const DEF = { color: '#3b82f6', weight: 3, opacity: 1, fillOpacity: 0.25, dash: '', size: 16, cell: 200 };
-const KIND_TH = { marker: 'หมุด', line: 'เส้น', polygon: 'พื้นที่', rectangle: 'สี่เหลี่ยม', circle: 'วงกลม', text: 'ข้อความ', grid: 'กริด' };
+const DEF = { color: '#3b82f6', weight: 3, opacity: 1, fillOpacity: 0.25, dash: '', size: 16, cell: 200, cols: 10, dir: 'ltr' };
+const KIND_TH = { marker: 'หมุด', line: 'เส้น', polygon: 'พื้นที่', rectangle: 'สี่เหลี่ยม', circle: 'วงกลม', text: 'ข้อความ', grid: 'กริด', colgrid: 'คอลัมน์' };
 const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#111827', '#ffffff'];
 const state = {
   mode: 'select',
@@ -1250,7 +1290,7 @@ function kindOf(l) {
   if (l instanceof L.Circle) return 'circle';
   if (l instanceof L.Rectangle) return 'rectangle';
   if (l instanceof L.Polygon) return l.feature?.properties?.kind === 'rectangle' ? 'rectangle' : 'polygon';
-  if (l instanceof L.Polyline) return l.feature?.properties?.kind === 'grid' ? 'grid' : 'line';
+  if (l instanceof L.Polyline) return l.feature?.properties?.kind === 'grid' ? 'grid' : l.feature?.properties?.kind === 'colgrid' ? 'colgrid' : 'line';
   return l.feature?.properties?.kind === 'text' ? 'text' : 'marker';
 }
 const props = l => (l.feature ||= { type: 'Feature', properties: {} }).properties ||= {};
@@ -1261,18 +1301,31 @@ function pinIcon(c) {
     html: `<svg width="30" height="38" viewBox="0 0 30 38"><path d="M15 36C15 36 3 23.5 3 14.5a12 12 0 0124 0C27 23.5 15 36 15 36z" fill="${esc(c)}" stroke="#fff" stroke-width="2"/><circle cx="15" cy="14.5" r="4.6" fill="#fff" opacity=".92"/></svg>`,
   });
 }
+const textFontSize = p => scaleBarMeters() >= 50 ? 9 : (+p.size || 16); // ซูมออกเกินสเกล 50 ม. → ล็อกขนาดตัวอักษรไว้ที่ 9 กันรกตา
 function textIcon(p) {
-  return L.divIcon({ className: 'txt-icon', iconSize: [0, 0], html: `<span style="color:${esc(p.color)};font-size:${+p.size || 16}px">${esc(p.name || ' ')}</span>` });
+  // หมุนตามแผนที่ไปตามปกติ (ไม่หักล้างมุมหมุน)
+  return L.divIcon({ className: 'txt-icon', iconSize: [0, 0], html: `<span style="color:${esc(p.color)};font-size:${textFontSize(p)}px">${esc(p.name || ' ')}</span>` });
 }
+function updateTextVisuals() {
+  items.eachLayer(l => {
+    if (kindOf(l) !== 'text') return;
+    const span = l.getElement?.()?.querySelector('span'); if (!span) return;
+    span.style.fontSize = textFontSize(props(l)) + 'px';
+  });
+}
+map.on('zoomend', updateTextVisuals);
 function mark(l, on) { const el = l?.getElement?.(); if (el) el.classList.toggle('sel', on); }
 
 function applyStyle(l) {
   const p = props(l), k = kindOf(l);
   if (k === 'marker') l.setIcon(pinIcon(p.color));
   else if (k === 'text') l.setIcon(textIcon(p));
-  else l.setStyle({ color: p.color, weight: +p.weight, opacity: +p.opacity, fillColor: p.color, fillOpacity: (k === 'line' || k === 'grid') ? 0 : +p.fillOpacity, dashArray: p.dash || null });
-  if (state.names && p.name && k !== 'text') {
-    l.bindTooltip(esc(p.name), { permanent: true, direction: k === 'marker' ? 'right' : 'center', className: 'nm-tip', opacity: 1 });
+  else { const fo = (k === 'line' || k === 'grid' || k === 'colgrid') ? 0 : +p.fillOpacity; l.setStyle({ color: p.color, weight: +p.weight, opacity: +p.opacity, fillColor: p.color, fill: fo > 0, fillOpacity: fo, dashArray: p.dash || null }); } // ทึบ 0% = fill:none ให้คลิกทะลุไปวัตถุด้านหลังได้
+  // แสดงชื่อวัตถุ: ถ้าเปิดสวิตช์ "แสดงชื่อ" ไว้ให้ติดอยู่ตลอด · ถ้าปิดอยู่ก็ยังปรากฏตอนเอาเมาส์ไปวางบนวัตถุ (sticky = ลอยตามเมาส์ ยกขึ้นด้านบนกันทับไอคอนเมาส์)
+  if (p.name && k !== 'text') {
+    l.bindTooltip(esc(p.name), state.names
+      ? { permanent: true, direction: k === 'marker' ? 'right' : 'center', className: 'nm-tip', opacity: 1 }
+      : { permanent: false, sticky: true, direction: 'top', offset: [0, -14], className: 'nm-tip', opacity: 1 });
   } else l.unbindTooltip();
   if (l === sel) mark(l, true);
 }
@@ -1280,20 +1333,27 @@ function applyStyle(l) {
 items.on('layeradd', e => {
   const l = e.layer; if (l._gis) return; l._gis = true;
   const p = props(l), k = kindOf(l);
-  for (const key in state.style) { if (key === 'cell' && k !== 'grid') continue; if (p[key] === undefined || p[key] === null || p[key] === '' && key !== 'dash') p[key] = state.style[key]; }
+  for (const key in state.style) { if (key === 'cell' && k !== 'grid') continue; if ((key === 'cols' || key === 'dir') && k !== 'colgrid') continue; if (p[key] === undefined || p[key] === null || p[key] === '' && key !== 'dash') p[key] = state.style[key]; }
   if (p.desc === undefined) p.desc = '';
+  if (p.locked === undefined) p.locked = false;
   if (!importing && !p.name) p.name = autoName(k);
   if (p.name === undefined) p.name = '';
   applyStyle(l);
+  if (k === 'colgrid') updateColLabels(l);
+  l.options.pmIgnore = !!p.locked;
   bodyDrag(l);
   l.on('click', ev => {
-    if (['remove', 'rectangle', 'grid', 'text', 'measure'].includes(state.mode) || map.pm.globalDrawModeEnabled()) return;
+    if (state.mode === 'remove' && props(l).locked) { L.DomEvent.stopPropagation(ev); toast('วัตถุถูกล็อกอยู่ — ปลดล็อกก่อนจึงจะลบได้'); return; }
+    if (['remove', 'rectangle', 'grid', 'colgrid', 'text', 'measure'].includes(state.mode) || map.pm.globalDrawModeEnabled()) return;
     L.DomEvent.stopPropagation(ev);
     if (performance.now() - grpDragAt < 400) return;
-    if (ev.originalEvent && (ev.originalEvent.shiftKey || ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) && sel && state.mode === 'select') toggleMulti(l); else select(l);
+    if (ev.originalEvent && (ev.originalEvent.shiftKey || ev.originalEvent.ctrlKey || ev.originalEvent.metaKey) && sel && state.mode === 'select') toggleMulti(l);
+    else if (props(l).groupId) selectGroup(props(l).groupId, l);
+    else select(l);
   });
   if (!importing) refresh();
 });
+items.on('layerremove', e => removeColLabels(e.layer));
 
 /* ───── ตั้งชื่อวัตถุ: ไม่ให้รก ─────
    วาดใหม่ → "<ชนิด> <เลขถัดไปที่ยังไม่ซ้ำ>" (นับจากชื่อที่มีอยู่ ไม่ใช่ตัวนับที่รีเซ็ตเมื่อรีโหลด)
@@ -1324,7 +1384,12 @@ function select(l, open = true) {
 
 function syncInspector() {
   const mm = multi.size > 1; $('#tab-props').classList.toggle('multi', mm);
-  if (mm) { $('#mb-title').textContent = 'เลือก ' + multi.size + ' รายการ'; return; }
+  if (mm) {
+    $('#mb-title').textContent = 'เลือก ' + multi.size + ' รายการ';
+    const ids = [...multi].map(l => props(l).groupId), grouped = ids[0] && ids.every(id => id === ids[0]);
+    $('#mb-ungroup').hidden = !grouped;
+    return;
+  }
   const l = sel, k = l ? kindOf(l) : '', p = l ? props(l) : state.style;
   $('#selTitle').textContent = l ? (p.name || KIND_TH[k]) : 'สไตล์เริ่มต้น';
   $('#selKind').textContent = l ? KIND_TH[k] : 'ใช้กับวัตถุที่วาดใหม่';
@@ -1337,8 +1402,12 @@ function syncInspector() {
   $$('#f-dash button').forEach(b => b.classList.toggle('on', b.dataset.v === (p.dash || '')));
   if (document.activeElement !== $('#f-cell')) $('#f-cell').value = p.cell ?? 200;
   $$('#f-cell-chips button').forEach(b => b.classList.toggle('on', +b.dataset.v === +p.cell));
+  if (document.activeElement !== $('#f-cols')) $('#f-cols').value = p.cols ?? 10;
+  $$('#f-cols-chips button').forEach(b => b.classList.toggle('on', +b.dataset.v === +p.cols));
+  $$('#f-dir button').forEach(b => b.classList.toggle('on', b.dataset.v === (p.dir || 'ltr')));
   $$('#swatches .sw[data-c]').forEach(b => b.classList.toggle('on', b.dataset.c.toLowerCase() === String(p.color).toLowerCase()));
   $('#sw-input').value = /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : '#3b82f6';
+  const lockBtn = $('#a-lock'); if (lockBtn) lockBtn.innerHTML = '<svg class="ic"><use href="#i-' + (l && p.locked ? 'unlock' : 'lock') + '"/></svg>' + (l && p.locked ? 'ปลดล็อก' : 'ล็อก');
   renderMeasure();
 }
 function setRange(id, v) { const i = $(id); i.value = v; i.nextElementSibling.textContent = i.id === 'f-size' || i.id === 'f-weight' ? v : Math.round(v * 100) + '%'; }
@@ -1347,6 +1416,8 @@ function patch(obj) {
   const target = sel ? props(sel) : state.style;
   Object.assign(target, obj);
   if (sel && obj.cell !== undefined && kindOf(sel) === 'grid') { rebuildGrid(sel, obj.cell); updateXform(); }
+  if (sel && obj.cols !== undefined && kindOf(sel) === 'colgrid') { rebuildCols(sel, obj.cols); updateXform(); }
+  if (sel && kindOf(sel) === 'colgrid') updateColLabels(sel);
   if (sel) { applyStyle(sel); renderList(); save(); } else { store.set('style', state.style); geomanOpts(); }
   syncInspector();
 }
@@ -1372,19 +1443,59 @@ $('#f-radius').addEventListener('input', e => {
 $('#f-radius').addEventListener('blur', () => renderMeasure());
 $('#a-zoom').onclick = () => sel && zoomTo(sel);
 $('#a-del').onclick = () => sel && remove(sel);
-$('#a-dup').onclick = () => {
+function duplicateSelection() {
+  // ทำสำเนาทั้งชุดที่เลือก (หรือชิ้นเดียว) เยื้องออกจากตำแหน่งเดิมคงที่บนจอ (ไม่ขึ้นกับซูม) · กรุ๊ปเดิมได้ groupId ใหม่เป็นอิสระ
   if (!sel) return;
-  const f = JSON.parse(JSON.stringify(layerToFeature(sel)));
-  const shift = c => typeof c[0] === 'number' ? [c[0] + 0.0004, c[1] - 0.0004] : c.map(shift);
-  f.geometry.coordinates = shift(f.geometry.coordinates);
-  const ls = featureToLayers(f); ls.forEach(l => { const q = props(l); q.name = copyName(q.name, kindOf(l)); items.addLayer(l); }); if (ls[0]) select(ls[0]); save();
-};
+  const ls = multi.size > 1 ? [...multi] : [sel];
+  const built = ls.map(l => featureToLayers(JSON.parse(JSON.stringify(layerToFeature(l))))).flat(); if (!built.length) return;
+  const gidMap = {};
+  built.forEach(l => {
+    const p = props(l);
+    p.name = copyName(p.name, kindOf(l));
+    if (p.groupId) { if (!gidMap[p.groupId]) gidMap[p.groupId] = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); p.groupId = gidMap[p.groupId]; }
+    if (l instanceof L.Marker || l instanceof L.Circle) { const c = map.latLngToContainerPoint(l.getLatLng()); l.setLatLng(map.containerPointToLatLng(L.point(c.x + 24, c.y + 24))); }
+    else applyPts(l, snapshot(l), q => L.point(q.x + 24, q.y + 24));
+    items.addLayer(l);
+  });
+  if (built.length > 1) { multi.clear(); built.forEach(l => { multi.add(l); mark(l, true); }); sel = built.at(-1); syncInspector(); updateXform(); renderList(); armMarkers(); openPanel('props'); }
+  else select(built[0]);
+  save(); toast(built.length > 1 ? `ทำสำเนาแล้ว ${built.length} ชิ้น` : 'ทำสำเนาแล้ว', 1200);
+}
+$('#a-dup').onclick = duplicateSelection;
+/* ───── ลำดับชั้น (ยกมาบนสุด / เอาไปล่างสุด) — เก็บเป็น z ในคุณสมบัติ คำนวณค่าสูงสุด/ต่ำสุดสดทุกครั้ง ───── */
+const maxZ = () => { let m = 0; items.eachLayer(l => { const z = +props(l).z; if (isFinite(z) && z > m) m = z; }); return m; };
+const minZ = () => { let m = 0; items.eachLayer(l => { const z = +props(l).z; if (isFinite(z) && z < m) m = z; }); return m; };
+function applyZOrder() {
+  items.getLayers().slice().sort((a, b) => (+props(a).z || 0) - (+props(b).z || 0)).forEach(l => {
+    if (l.setZIndexOffset) l.setZIndexOffset(+props(l).z || 0); else if (l.bringToFront) l.bringToFront();
+  });
+}
+function bringFront(l) {
+  const z = maxZ() + 1; props(l).z = z;
+  if (l.setZIndexOffset) l.setZIndexOffset(z); else if (l.bringToFront) l.bringToFront();
+  renderList(); save(); toast('ย้ายไปไว้หน้าสุดแล้ว', 1200);
+}
+function sendBack(l) {
+  const z = minZ() - 1; props(l).z = z;
+  if (l.setZIndexOffset) l.setZIndexOffset(z); else if (l.bringToBack) l.bringToBack();
+  renderList(); save(); toast('ย้ายไปไว้หลังสุดแล้ว', 1200);
+}
+function toggleLock(l) {
+  const p = props(l); p.locked = !p.locked; l.options.pmIgnore = !!p.locked;
+  if (p.locked && multi.has(l)) { multi.delete(l); mark(l, false); }
+  renderList(); syncInspector(); updateXform(); armMarkers(); save();
+  toast(p.locked ? 'ล็อกวัตถุแล้ว' : 'ปลดล็อกแล้ว', 1200);
+}
+$('#a-front').onclick = () => sel && bringFront(sel);
+$('#a-back').onclick = () => sel && sendBack(sel);
+$('#a-lock').onclick = () => sel && toggleLock(sel);
 
 function zoomTo(l) {
   if (l.getBounds) map.fitBounds(l.getBounds().pad(0.4), { maxZoom: 19 });
   else map.setView(l.getLatLng(), Math.max(map.getZoom(), 16));
 }
 function remove(l) {
+  if (props(l).locked) { toast('วัตถุถูกล็อกอยู่ — ปลดล็อกก่อนจึงจะลบได้'); return; }
   items.removeLayer(l); if (l === sel) select(null, false);
   refresh();
 }
@@ -1460,6 +1571,10 @@ function renderMeasure() {
     const gi = gridInfo(sel), ring = gridRing(sel);
     rows.push(['ขนาดกริด', fmtLen(gi.W) + ' × ' + fmtLen(gi.H)], ['จำนวนช่อง', gi.cols + ' × ' + gi.rows + ' = ' + gi.cols * gi.rows], ['ช่องละ', fmtLen(gi.cell)], ...fmtArea(gi.W * gi.H),
       ['Heading ด้านกว้าง', fmtHdg(legInfo(ring[0], ring[1]).az)], ['Heading ด้านสูง', fmtHdg(legInfo(ring[0], ring[3]).az)]);
+  } else if (k === 'colgrid') {
+    const gi = colsInfo(sel), ring = gridRing(sel);
+    rows.push(['ขนาด', fmtLen(gi.W) + ' × ' + fmtLen(gi.H)], ['จำนวนคอลัมน์', gi.cols + ' ช่อง'], ['กว้างต่อช่อง', fmtLen(gi.W / gi.cols)], ...fmtArea(gi.W * gi.H),
+      ['Heading ด้านกว้าง', fmtHdg(legInfo(ring[0], ring[1]).az)], ['Heading ด้านสูง', fmtHdg(legInfo(ring[0], ring[3]).az)]);
   } else if (k === 'marker' || k === 'text') rows.push(['พิกัด', fmtLL(g.coordinates[1], g.coordinates[0])]);
   else if (k === 'circle') { const r = sel.getRadius(); rows.push(['รัศมี', fmtLen(r)], ['เส้นผ่านศูนย์กลาง', fmtLen(2 * r)], ['เส้นรอบวง', fmtLen(2 * Math.PI * r)], ...fmtArea(Math.PI * r * r)); }
   else if (g.type === 'LineString' || g.type === 'MultiLineString') {
@@ -1489,19 +1604,60 @@ function setUnit(u) {
 document.addEventListener('click', e => { const b = e.target.closest('[data-u]'); if (b) setUnit(b.dataset.u); });
 
 /* ───────────── list ───────────── */
-const ICON = { marker: 'marker', line: 'line', polygon: 'polygon', rectangle: 'rectangle', circle: 'circle', text: 'text', grid: 'grid' };
+const ICON = { marker: 'marker', line: 'line', polygon: 'polygon', rectangle: 'rectangle', circle: 'circle', text: 'text', grid: 'grid', colgrid: 'colgrid' };
 function renderList() {
-  const ls = items.getLayers();
+  // เรียงตามลำดับชั้น (z) มากไปน้อย — บนสุดของรายการ = วัตถุหน้าสุดบนแผนที่ แบบพาเนล Layers ของ Photoshop
+  const ls = items.getLayers().slice().sort((a, b) => (+props(b).z || 0) - (+props(a).z || 0));
   $('#count').textContent = ls.length;
   $('#empty').hidden = ls.length > 0;
   $('#list').innerHTML = ls.map(l => {
     const p = props(l), k = kindOf(l);
-    return `<li data-id="${L.stamp(l)}" class="${l === sel ? 'on' : ''}"><span class="dot" style="background:${esc(p.color)}"></span><span class="nm">${esc(p.name || KIND_TH[k])}</span><svg class="ic"><use href="#i-${ICON[k]}"/></svg></li>`;
+    return `<li data-id="${L.stamp(l)}" class="${l === sel ? 'on' : ''}">
+      <button class="li-grip" title="ลากเพื่อจัดลำดับชั้น"><svg class="ic"><use href="#i-grip"/></svg></button>
+      <span class="dot" style="background:${esc(p.color)}"></span>
+      <button class="li-lock${p.locked ? ' on' : ''}" data-act="lock" title="${p.locked ? 'ปลดล็อก' : 'ล็อก'}"><svg class="ic"><use href="#i-${p.locked ? 'lock' : 'unlock'}"/></svg></button>
+      <span class="nm">${esc(p.name || KIND_TH[k])}</span>
+      <svg class="ic"><use href="#i-${ICON[k]}"/></svg>
+    </li>`;
   }).join('');
 }
 $('#list').addEventListener('click', e => {
   const li = e.target.closest('li'); if (!li) return;
-  const l = items.getLayer(+li.dataset.id); if (l) { select(l, false); zoomTo(l); }
+  const l = items.getLayer(+li.dataset.id); if (!l) return;
+  if (e.target.closest('.li-lock')) { toggleLock(l); return; }
+  if (e.target.closest('.li-grip')) return;
+  select(l, false); zoomTo(l);
+});
+/* ลากจุดจับ (grip) เพื่อจัดลำดับชั้นในรายการ — ปล่อยแล้วคำนวณ z ใหม่ตามตำแหน่งที่วาง แบบพาเนล Layers */
+$('#list').addEventListener('pointerdown', e => {
+  const grip = e.target.closest('.li-grip'); if (!grip) return;
+  e.preventDefault();
+  const li = grip.closest('li'), listEl = $('#list'), rows = [...listEl.children];
+  li.classList.add('dragging');
+  let overLi = null, overPos = null;
+  const mv = ev => {
+    overLi = null; overPos = null;
+    for (const other of rows) {
+      if (other === li) continue;
+      const r = other.getBoundingClientRect();
+      if (ev.clientY >= r.top && ev.clientY <= r.bottom) { overLi = other; overPos = (ev.clientY - r.top) < r.height / 2 ? 'before' : 'after'; break; }
+    }
+    rows.forEach(x => x.classList.remove('drop-before', 'drop-after'));
+    if (overLi) overLi.classList.add(overPos === 'before' ? 'drop-before' : 'drop-after');
+  };
+  const up = () => {
+    window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up);
+    li.classList.remove('dragging');
+    rows.forEach(x => x.classList.remove('drop-before', 'drop-after'));
+    if (overLi) {
+      if (overPos === 'before') overLi.before(li); else overLi.after(li);
+      const order = [...listEl.children], n = order.length;
+      order.forEach((el, i) => { const l2 = items.getLayer(+el.dataset.id); if (l2) props(l2).z = n - i; });
+      applyZOrder(); renderList(); save();
+    }
+  };
+  window.addEventListener('pointermove', mv);
+  window.addEventListener('pointerup', up);
 });
 $('#l-fit').onclick = () => items.getLayers().length ? map.fitBounds(items.getBounds().pad(0.2), { maxZoom: 18 }) : toast('ยังไม่มีวัตถุ');
 $('#l-clear').onclick = () => {
@@ -1532,6 +1688,7 @@ function restore(str) {
     setMode('select'); select(null, false); items.clearLayers(); importing = true;
     JSON.parse(str).forEach(f => featureToLayers(f).forEach(l => items.addLayer(l)));
   } finally { importing = false; hist.busy = false; }
+  applyZOrder();
   renderList(); syncInspector(); updateXform(); persist(); updateUndoUI();
 }
 function undo() { flushCommit(); if (hist.i > 0) { hist.i--; restore(hist.stack[hist.i]); toast('ย้อนกลับ', 900); } }
@@ -1539,7 +1696,7 @@ function redo() { flushCommit(); if (hist.i < hist.stack.length - 1) { hist.i++;
 const persist = debounce(() => store.set('data', { type: 'FeatureCollection', features: items.getLayers().map(l => layerToFeature(l)) }), 250);
 const save = () => { persist(); if (!hist.busy) commitSoon(); };
 function refresh() { renderList(); if (sel) { if (!items.hasLayer(sel)) select(null, false); else renderMeasure(); } updateXform(); save(); }
-items.on('dragend pm:edit pm:dragend pm:rotateend pm:cut pm:vertexadded pm:vertexremoved pm:markerdragend pm:update', e => { const l = e.layer || e.target; if (l && l.feature && kindOf(l) === 'grid') rebuildGrid(l); refresh(); });
+items.on('dragend pm:edit pm:dragend pm:rotateend pm:cut pm:vertexadded pm:vertexremoved pm:markerdragend pm:update', e => { const l = e.layer || e.target; if (l && l.feature) fixGrid(l); refresh(); });
 map.on('pm:create', e => {
   if (!state.cont) select(e.layer);
   refresh();
@@ -1553,19 +1710,19 @@ map.on('pm:drawend', () => { if (!switching && state.mode !== 'select' && !['edi
 /* ───────────── tools ───────────── */
 const TOOLS = [
   { id: 'select', ic: 'select', tip: 'เลือก / เลื่อนแผนที่ (Esc)' },
+  { id: 'boxsel', ic: 'boxsel', tip: 'เลือกหลายชิ้นด้วยการลากคลุม (คลิกเดี่ยวยังเลือกทีละชิ้นได้)' },
   { id: 'marker', ic: 'marker', tip: 'หมุด', draw: 'Marker' },
   { id: 'line', ic: 'line', tip: 'เส้น', draw: 'Line' },
   { id: 'polygon', ic: 'polygon', tip: 'พื้นที่ (โพลิกอน)', draw: 'Polygon' },
   { id: 'rectangle', ic: 'rectangle', tip: 'สี่เหลี่ยม (ตามทิศหน้าจอ) — แตะมุมตรงข้าม 2 จุด' },
   { id: 'grid', ic: 'grid', tip: 'กริด — แตะมุมตรงข้าม 2 จุด (ช่องละ 200 ม. ปรับได้)' },
+  { id: 'colgrid', ic: 'colgrid', tip: 'สี่เหลี่ยมคอลัมน์ — แตะมุมตรงข้าม 2 จุด (แบ่ง 10 ช่องเท่ากัน มีเลขกำกับ ปรับได้ — ใช้วาดห้องแถว)' },
   { id: 'circle', ic: 'circle', tip: 'วงกลม — แตะศูนย์กลาง แล้วแตะกำหนดรัศมี (แสดงรัศมี/พื้นที่สด)', draw: 'Circle' },
   { id: 'text', ic: 'text', tip: 'ข้อความ' },
   { id: 'measure', ic: 'ruler', tip: 'วัดระยะ + Heading — แตะทีละจุด (Esc เสร็จสิ้น)' },
   '-',
   { id: 'edit', ic: 'edit', tip: 'แก้ไขจุด (ลาก/เพิ่ม/ลบจุด)' },
-  { id: 'drag', ic: 'drag', tip: 'ย้ายวัตถุ' },
   { id: 'rotate', ic: 'rotate', tip: 'หมุนวัตถุ' },
-  { id: 'cut', ic: 'cut', tip: 'ตัดพื้นที่ออก', draw: 'Cut' },
   { id: 'remove', ic: 'trash', tip: 'โหมดลบ — แตะวัตถุที่ต้องการลบ' },
   '-',
   { id: 'snap', ic: 'magnet', tip: 'ดูดติดจุด/เส้น (Snap)', toggle: 'snap' },
@@ -1585,12 +1742,14 @@ function syncToolButtons(mode) {
   });
   $('#map').classList.toggle('tool-text', mode === 'text');
   $('#map').classList.toggle('tool-measure', mode === 'measure');
+  $('#map').classList.toggle('tool-active', mode !== 'select');
   armMarkers(); updateXform(); updateDrawbar();
 }
 function disableAll() {
   switching = true;
   map.pm.disableDraw(); map.pm.disableGlobalEditMode(); map.pm.disableGlobalDragMode();
   map.pm.disableGlobalRotateMode(); map.pm.disableGlobalRemovalMode();
+  map.dragging.enable();
   rectCancel(); mzStop();
   switching = false;
 }
@@ -1599,14 +1758,16 @@ function setMode(m) {
   disableAll();
   const t = toolDef(m);
   if (t.draw) map.pm.enableDraw(t.draw);
-  else if (m === 'edit') map.pm.enableGlobalEditMode({ allowSelfIntersection: true });
+  else if (m === 'edit') { map.pm.enableGlobalEditMode({ allowSelfIntersection: true }); items.eachLayer(l => { if (props(l).locked && l.pm) l.pm.disable(); }); }
   else if (m === 'drag') map.pm.enableGlobalDragMode();
-  else if (m === 'rotate') map.pm.enableGlobalRotateMode();
+  else if (m === 'rotate') { map.pm.enableGlobalRotateMode(); items.eachLayer(l => { if (props(l).locked && l.pm) l.pm.disable(); }); }
   else if (m === 'remove') map.pm.enableGlobalRemovalMode();
   else if (m === 'measure') mzStart();
+  else if (m === 'boxsel') map.dragging.disable();
   syncToolButtons(m);
-  if (m === 'rectangle' || m === 'grid') toast('แตะมุมแรก แล้วแตะมุมตรงข้าม (Esc ยกเลิก)', 2200);
-  if (m !== 'select' && !['edit', 'drag', 'rotate', 'remove', 'text'].includes(m)) select(null, false);
+  if (m === 'rectangle' || m === 'grid' || m === 'colgrid') toast('แตะมุมแรก แล้วแตะมุมตรงข้าม (Esc ยกเลิก)', 2200);
+  if (m === 'boxsel') toast('ลากคลุมวัตถุที่ต้องการเลือก (คลิกเดี่ยวยังเลือกทีละชิ้นได้)', 2200);
+  if (m !== 'select' && !['edit', 'drag', 'rotate', 'remove', 'text', 'boxsel'].includes(m)) select(null, false);
 }
 toolsEl.addEventListener('click', e => {
   const b = e.target.closest('.btn'); if (!b) return;
@@ -1625,6 +1786,78 @@ map.on('click', e => {
   if (state.mode === 'measure') return mzClick(e);
   if (DRAW2.includes(state.mode)) return rectClick(e);
   if (!map.pm.globalDrawModeEnabled() && state.mode !== 'remove') select(null, false);
+});
+/* ───── เลือกหลายชิ้นด้วยการลากคลุม (โหมด "เลือกแบบลาก") ─────
+   คลิกเดี่ยวบนวัตถุยังเลือกทีละชิ้นได้ตามปกติ · ลากบนพื้นที่ว่างจะวาดกรอบแล้วเลือกทุกชิ้นที่กรอบแตะ (เพิ่มเข้าชุดที่เลือกอยู่) */
+let boxSelDiv = null;
+const markHit = (l, on) => { const el = l?.getElement?.(); if (el) el.classList.toggle('boxhit', on); };
+// ตัดสิน "โดนกรอบ" จากรูปทรงจริงบนจอ (จุดยอด/ด้านตัดกรอบ) ไม่ใช่กรอบล้อมแบบตรงแกน — กันพลาดเวลาเช็ควัตถุที่หมุนอยู่ ซึ่งกรอบล้อมแบบตรงแกนจะใหญ่เกินตัวจริง
+function segX(p1, p2, p3, p4) {
+  const d = (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y);
+  if (!d) return false;
+  const ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / d;
+  const ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / d;
+  return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1;
+}
+function pointInRing(p, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    if (((ring[i].y > p.y) !== (ring[j].y > p.y)) && (p.x < (ring[j].x - ring[i].x) * (p.y - ring[i].y) / (ring[j].y - ring[i].y) + ring[i].x)) inside = !inside;
+  }
+  return inside;
+}
+function boxHitShape(l, bx0, by0, bx1, by1) {
+  if (l instanceof L.Marker) { const p = map.latLngToContainerPoint(l.getLatLng()); return p.x >= bx0 && p.x <= bx1 && p.y >= by0 && p.y <= by1; }
+  if (l instanceof L.Circle) {
+    const c = map.latLngToContainerPoint(l.getLatLng()), r = circlePx(l);
+    const cx = Math.max(bx0, Math.min(c.x, bx1)), cy = Math.max(by0, Math.min(c.y, by1));
+    return Math.hypot(c.x - cx, c.y - cy) <= r;
+  }
+  const B = [L.point(bx0, by0), L.point(bx1, by0), L.point(bx1, by1), L.point(bx0, by1)];
+  const closed = ['polygon', 'rectangle'].includes(kindOf(l));
+  for (const latlngs of ringsOf(l)) {
+    const ring = latlngs.map(ll => map.latLngToContainerPoint(ll));
+    if (ring.some(p => p.x >= bx0 && p.x <= bx1 && p.y >= by0 && p.y <= by1)) return true; // จุดยอดอยู่ในกรอบ
+    const n = closed ? ring.length : ring.length - 1;
+    for (let i = 0; i < n; i++) { const a = ring[i], c = ring[(i + 1) % ring.length]; for (let j = 0; j < 4; j++) if (segX(a, c, B[j], B[(j + 1) % 4])) return true; } // ด้านตัดกรอบ
+    if (closed && pointInRing(L.point((bx0 + bx1) / 2, (by0 + by1) / 2), ring)) return true; // กรอบเล็กอยู่กลางพื้นที่ปิดขนาดใหญ่ทั้งหมด
+  }
+  return false;
+}
+const boxHitTest = (bx0, by0, bx1, by1) => items.getLayers().filter(l => !props(l).locked && boxHitShape(l, bx0, by0, bx1, by1));
+map.getContainer().addEventListener('pointerdown', e => {
+  if (state.mode !== 'boxsel' || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('.leaflet-interactive, .leaflet-marker-icon, #xform, .leaflet-control')) return;
+  const rc = map.getContainer().getBoundingClientRect(), x0 = e.clientX - rc.left, y0 = e.clientY - rc.top;
+  let moved = false, live = new Set();
+  const mv = ev => {
+    const x1 = ev.clientX - rc.left, y1 = ev.clientY - rc.top;
+    if (!moved && Math.hypot(x1 - x0, y1 - y0) < 4) return;
+    moved = true;
+    if (!boxSelDiv) { boxSelDiv = document.createElement('div'); boxSelDiv.className = 'box-sel'; map.getContainer().appendChild(boxSelDiv); }
+    Object.assign(boxSelDiv.style, { left: Math.min(x0, x1) + 'px', top: Math.min(y0, y1) + 'px', width: Math.abs(x1 - x0) + 'px', height: Math.abs(y1 - y0) + 'px' });
+    // ไฮไลต์วัตถุที่กรอบแตะสดๆ ระหว่างลาก ให้เห็นว่ากำลังคลุมอะไรอยู่
+    const now = new Set(boxHitTest(Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1)));
+    live.forEach(l => { if (!now.has(l)) markHit(l, false); });
+    now.forEach(l => { if (!live.has(l)) markHit(l, true); });
+    live = now;
+    if (!boxSelDiv.firstChild) boxSelDiv.appendChild(document.createElement('span'));
+    boxSelDiv.firstChild.textContent = live.size ? live.size + ' ชิ้น' : '';
+  };
+  const up = ev => {
+    window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+    live.forEach(l => markHit(l, false));
+    if (moved && live.size) {
+      if (!multi.size && sel) multi.add(sel);
+      live.forEach(l => { if (!multi.has(l)) { multi.add(l); mark(l, true); } });
+      if (multi.size <= 1) { const only = [...multi][0]; if (only) select(only); }
+      else { sel = [...multi].at(-1); syncInspector(); updateXform(); renderList(); armMarkers(); openPanel('props'); }
+      grpDragAt = performance.now(); // กันคลิกว่างหลังปล่อยลากไปยกเลิกการเลือกที่เพิ่งทำ
+    } else if (moved) grpDragAt = performance.now();
+    if (boxSelDiv) { boxSelDiv.remove(); boxSelDiv = null; }
+  };
+  window.addEventListener('pointermove', mv);
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
 });
 /* ───── ย้าย / ปรับขนาดวัตถุได้อิสระ (โหมดเลือก) ─────
    ลากตัววัตถุ = ย้าย · ลากจุดจับรอบกรอบ = ย่อ/ขยายอิสระตามแนวหน้าจอ (Shift ที่มุม = คงสัดส่วน) · วงกลม: ลากจุดจับปรับรัศมี · หมุด/ข้อความ: ลากเพื่อย้าย */
@@ -1654,7 +1887,7 @@ const vertexCount = l => ringsOf(l).reduce((n, r) => n + r.length, 0);
 const ptMode = l => state.xmode === 'pt' && PT_KINDS.includes(kindOf(l)) && vertexCount(l) <= PT_MAX;
 function updateXform() {
   const grp = multi.size > 1;
-  const ok = sel && state.mode === 'select' && items.hasLayer(sel) && (grp || !['marker', 'text'].includes(kindOf(sel)));
+  const ok = sel && state.mode === 'select' && items.hasLayer(sel) && (grp || !['marker', 'text'].includes(kindOf(sel))) && !(!grp && props(sel).locked);
   if (!ok) { xf.hidden = true; xf._for = null; return; }
   const pt = !grp && ptMode(sel), n = pt ? vertexCount(sel) : 0, key = grp ? 'g:' + [...multi].map(L.stamp).join(',') : sel;
   if (xf._for !== key || xf._pt !== pt || xf._n !== n) buildXform(pt, n, grp ? key : null);
@@ -1799,20 +2032,52 @@ function startRotate(e, h) {
   h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
 }
 // ลากตัววัตถุ (เส้น/พื้นที่/วงกลม) เพื่อย้าย — กดค้างแล้วลากได้เลยแม้ยังไม่ได้เลือก
+/* ───── เส้นไกด์ช่วยจัดแนว (Smart guides) — ขณะลากวัตถุเดี่ยว จะดูดเข้าแนวขอบ/กึ่งกลางของวัตถุอื่นที่อยู่ใกล้ (แบบ PowerPoint/Figma) ───── */
+const SNAP_PX = 6;
+let guideH = null, guideV = null;
+function showGuide(axis, pos, lo, hi) {
+  let g = axis === 'h' ? guideH : guideV;
+  if (!g) { g = document.createElement('div'); g.className = 'snap-guide ' + axis; map.getContainer().appendChild(g); if (axis === 'h') guideH = g; else guideV = g; }
+  if (axis === 'h') Object.assign(g.style, { top: pos + 'px', left: lo + 'px', width: (hi - lo) + 'px', display: '' });
+  else Object.assign(g.style, { left: pos + 'px', top: lo + 'px', height: (hi - lo) + 'px', display: '' });
+}
+function hideGuides() { if (guideH) guideH.style.display = 'none'; if (guideV) guideV.style.display = 'none'; }
+function computeSnap(bb, exclude) {
+  const cx = (bb.x0 + bb.x1) / 2, cy = (bb.y0 + bb.y1) / 2;
+  let bestX = null, bestY = null;
+  items.eachLayer(o => {
+    if (o === exclude) return;
+    const ob = bboxAny(o), ocx = (ob.x0 + ob.x1) / 2, ocy = (ob.y0 + ob.y1) / 2;
+    [bb.x0, bb.x1, cx].forEach(a => [ob.x0, ob.x1, ocx].forEach(b => { const d = b - a; if (Math.abs(d) <= SNAP_PX && (!bestX || Math.abs(d) < Math.abs(bestX.delta))) bestX = { delta: d, pos: b, lo: Math.min(bb.y0, ob.y0) - 20, hi: Math.max(bb.y1, ob.y1) + 20 }; }));
+    [bb.y0, bb.y1, cy].forEach(a => [ob.y0, ob.y1, ocy].forEach(b => { const d = b - a; if (Math.abs(d) <= SNAP_PX && (!bestY || Math.abs(d) < Math.abs(bestY.delta))) bestY = { delta: d, pos: b, lo: Math.min(bb.x0, ob.x0) - 20, hi: Math.max(bb.x1, ob.x1) + 20 }; }));
+  });
+  return { dx: bestX ? bestX.delta : 0, dy: bestY ? bestY.delta : 0, vLine: bestX, hLine: bestY };
+}
 function bodyDrag(l) {
   const el = l.getElement?.(); if (!el || l instanceof L.Marker) return;
   el.classList.add('movable');
   el.addEventListener('pointerdown', e => {
     if (state.mode !== 'select' || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (props(l).locked) return;
     if (e.shiftKey || e.ctrlKey || e.metaKey || (multi.size > 1 && multi.has(l))) return; // Ctrl/Shift+คลิก = เลือกหลายชิ้น ไม่ลาก
     if (sel !== l) select(l);
     const x0 = e.clientX, y0 = e.clientY, snap = snapshot(l); let moving = false;
     const bb0 = bboxOf(l), cx0 = (bb0.x0 + bb0.x1) / 2, cy0 = (bb0.y0 + bb0.y1) / 2, rc0 = map.getContainer().getBoundingClientRect(); let dlbl = null;
+    const rPx = l instanceof L.Circle ? circlePx(l) : 0;
+    const candidateBbox = (dx, dy) => {
+      if (l instanceof L.Circle) { const cx = snap.c.x + dx, cy = snap.c.y + dy; return { x0: cx - rPx, y0: cy - rPx, x1: cx + rPx, y1: cy + rPx }; }
+      const pts = flatPts(snap.pts).map(p => ({ x: p.x + dx, y: p.y + dy }));
+      return { x0: Math.min(...pts.map(p => p.x)), y0: Math.min(...pts.map(p => p.y)), x1: Math.max(...pts.map(p => p.x)), y1: Math.max(...pts.map(p => p.y)) };
+    };
     map.dragging.disable();
     const mv = ev => {
-      const dx = ev.clientX - x0, dy = ev.clientY - y0;
+      let dx = ev.clientX - x0, dy = ev.clientY - y0;
       if (!moving && Math.hypot(dx, dy) < 4) return;
       moving = true;
+      const snapRes = computeSnap(candidateBbox(dx, dy), l);
+      dx += snapRes.dx; dy += snapRes.dy;
+      if (snapRes.vLine) showGuide('v', snapRes.vLine.pos, snapRes.vLine.lo, snapRes.vLine.hi); else if (guideV) guideV.style.display = 'none';
+      if (snapRes.hLine) showGuide('h', snapRes.hLine.pos, snapRes.hLine.lo, snapRes.hLine.hi); else if (guideH) guideH.style.display = 'none';
       if (l instanceof L.Circle) l.setLatLng(map.containerPointToLatLng(L.point(snap.c.x + dx, snap.c.y + dy)));
       else applyPts(l, snap, p => L.point(p.x + dx, p.y + dy));
       updateXform(); renderMeasure();
@@ -1822,7 +2087,7 @@ function bodyDrag(l) {
     };
     const up = () => {
       window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
-      map.dragging.enable(); if (dlbl) dlbl.remove(); if (moving) { fixGrid(l); refresh(); }
+      map.dragging.enable(); if (dlbl) dlbl.remove(); hideGuides(); if (moving) { fixGrid(l); refresh(); }
     };
     window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
   });
@@ -1897,7 +2162,7 @@ function startGroupRotate(e, h) {
 }
 // หมุด/ข้อความ: ลากย้ายได้เมื่อถูกเลือก (ใช้ระบบ drag ของ Leaflet)
 function armMarkers() {
-  items.eachLayer(l => { if (l.dragging) (l === sel && multi.size < 2 && state.mode === 'select') ? l.dragging.enable() : l.dragging.disable(); });
+  items.eachLayer(l => { if (l.dragging) (l === sel && multi.size < 2 && state.mode === 'select' && !props(l).locked) ? l.dragging.enable() : l.dragging.disable(); });
 }
 map.on('move zoom rotate viewreset resize', updateXform);
 
@@ -1908,27 +2173,33 @@ const rectCorners = (aLL, bPt) => {
   const a = map.latLngToContainerPoint(aLL);
   return [L.point(a.x, a.y), L.point(bPt.x, a.y), L.point(bPt.x, bPt.y), L.point(a.x, bPt.y)].map(p => map.containerPointToLatLng(p));
 };
-const DRAW2 = ['rectangle', 'grid']; // เครื่องมือที่วาดด้วยการแตะมุมตรงข้าม 2 จุด
+const DRAW2 = ['rectangle', 'grid', 'colgrid']; // เครื่องมือที่วาดด้วยการแตะมุมตรงข้าม 2 จุด
 function rectCancel() { if (rect.prev) { map.removeLayer(rect.prev); rect.prev = null; } rect.a = null; updateDrawbar(); }
 map.on('mousemove', e => {
   if (!DRAW2.includes(state.mode) || !rect.a) return;
-  const ll = rectCorners(rect.a, e.containerPoint), isGrid = state.mode === 'grid', geo = isGrid ? gridFromLL(ll, state.style.cell).lines : ll;
+  const m = state.mode, isLine = m !== 'rectangle';
+  const ll = rectCorners(rect.a, e.containerPoint);
+  const geo = m === 'grid' ? gridFromLL(ll, state.style.cell).lines : m === 'colgrid' ? colsFromLL(ll, state.style.cols).lines : ll;
+  const col = m === 'grid' ? '#facc15' : m === 'colgrid' ? '#38bdf8' : state.style.color;
   if (rect.prev) rect.prev.setLatLngs(geo);
-  else rect.prev = (isGrid ? L.polyline : L.polygon)(geo, { color: isGrid ? '#facc15' : state.style.color, weight: isGrid ? 1.5 : state.style.weight, fillColor: state.style.color, fillOpacity: state.style.fillOpacity, dashArray: isGrid ? null : '6 6', interactive: false, pmIgnore: true }).addTo(map);
+  else rect.prev = (isLine ? L.polyline : L.polygon)(geo, { color: col, weight: isLine ? 1.5 : state.style.weight, fillColor: state.style.color, fillOpacity: state.style.fillOpacity, dashArray: isLine ? null : '6 6', interactive: false, pmIgnore: true }).addTo(map);
 });
 function rectClick(e) {
   if (!rect.a) { rect.a = e.latlng; updateDrawbar(); return; }
   const a = map.latLngToContainerPoint(rect.a);
   if (Math.abs(e.containerPoint.x - a.x) < 4 || Math.abs(e.containerPoint.y - a.y) < 4) return; // แตะซ้ำที่เดิม ไม่สร้าง
-  const ll = rectCorners(rect.a, e.containerPoint), isGrid = state.mode === 'grid';
+  const ll = rectCorners(rect.a, e.containerPoint), m = state.mode;
   let l;
-  if (isGrid) {
+  if (m === 'grid') {
     const g = gridFromLL(ll, state.style.cell); l = L.polyline(g.lines);
     l.feature = { type: 'Feature', properties: { kind: 'grid', cell: g.cell, color: '#facc15', weight: 1.5, opacity: 1 } };
     if (g.adjusted) toast('ช่องเล็กเกินไปสำหรับกรอบนี้ — ปรับเป็น ' + fmtDist(g.cell));
+  } else if (m === 'colgrid') {
+    const g = colsFromLL(ll, state.style.cols); l = L.polyline(scaleBarMeters() >= 50 ? [g.lines[0]] : g.lines);
+    l.feature = { type: 'Feature', properties: { kind: 'colgrid', cols: g.cols, color: '#38bdf8', weight: 1.5, opacity: 1 } };
   } else { l = L.polygon(ll); l.feature = { type: 'Feature', properties: { kind: 'rectangle' } }; }
   rectCancel(); items.addLayer(l);
-  if (!state.cont) { setMode('select'); select(l); } else toast(isGrid ? 'แตะมุมแรกของกริดถัดไป' : 'แตะมุมแรกของสี่เหลี่ยมถัดไป', 1500);
+  if (!state.cont) { setMode('select'); select(l); } else toast(m === 'grid' ? 'แตะมุมแรกของกริดถัดไป' : m === 'colgrid' ? 'แตะมุมแรกของคอลัมน์ถัดไป' : 'แตะมุมแรกของสี่เหลี่ยมถัดไป', 1500);
   save();
 }
 function addText(ll) {
@@ -1944,6 +2215,18 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Escape') { if (typing) document.activeElement.blur(); setMode('select'); select(null, false); closePops(); }
   else if ((e.key === 'Delete' || e.key === 'Backspace') && sel && !typing) { e.preventDefault(); if (multi.size > 1) removeMulti(); else if (selV) removeVertex(selV.ri, selV.vi); else remove(sel); }
 });
+/* ลูกศรขยับวัตถุที่เลือกทีละพิกเซล (Alt+ลูกศร = ขยับทีละ 10 พิกเซล) — ดักก่อน Leaflet เลื่อนแผนที่ด้วยลูกศรเอง */
+window.addEventListener('keydown', e => {
+  if (state.mode !== 'select' || typingNow() || !sel) return;
+  const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key]; if (!d) return;
+  const ls = multi.size > 1 ? [...multi] : [sel];
+  if (ls.some(l => props(l).locked)) return;
+  e.preventDefault(); e.stopPropagation();
+  const step = e.altKey ? 10 : 1;
+  ls.forEach(l => moveBy(l, d[0] * step, d[1] * step));
+  ls.forEach(fixGrid);
+  refresh();
+}, true);
 
 /* ───────────── panel & popovers ───────────── */
 function openPanel(tab) { $('#panel').hidden = false; if (tab) showTab(tab); $('#b-panel').classList.add('on'); }
@@ -2022,10 +2305,15 @@ function exportFeatures(onlySel) {
 }
 function featureToLayers(f) {
   const p = { ...(f.properties || {}) }, g = f.geometry; if (!g) return [];
+  if (p.locked !== undefined) p.locked = p.locked === true || p.locked === 'true';
   const mk = l => { l.feature = { type: 'Feature', properties: { ...p } }; return l; };
   if (p.kind === 'grid') { // กริดเป็นวัตถุเดียว (เส้นขอบ + เส้นภายใน) ไม่แตกเป็นหลายวัตถุ
     const lines = g.type === 'MultiLineString' ? g.coordinates : g.type === 'GeometryCollection' ? g.geometries.filter(x => x.type === 'LineString').map(x => x.coordinates) : g.type === 'LineString' ? [g.coordinates] : null;
     if (lines && lines.length) { p.cell = +p.cell > 0 ? +p.cell : 200; return [mk(L.polyline(lines.map(c => c.map(q => [q[1], q[0]]))))]; }
+  }
+  if (p.kind === 'colgrid') { // สี่เหลี่ยมคอลัมน์เป็นวัตถุเดียว (เส้นขอบ + เส้นแบ่งคอลัมน์) ไม่แตกเป็นหลายวัตถุ
+    const lines = g.type === 'MultiLineString' ? g.coordinates : g.type === 'GeometryCollection' ? g.geometries.filter(x => x.type === 'LineString').map(x => x.coordinates) : g.type === 'LineString' ? [g.coordinates] : null;
+    if (lines && lines.length) { p.cols = +p.cols > 0 ? Math.round(+p.cols) : 10; p.dir = p.dir === 'rtl' ? 'rtl' : 'ltr'; return [mk(L.polyline(lines.map(c => c.map(q => [q[1], q[0]]))))]; }
   }
   if (p.kind === 'circle' && +p.radius > 0) {
     let ll;
@@ -2042,6 +2330,7 @@ function addFeatures(fc) {
   importing = true; const added = [];
   try { fc.features.forEach(f => featureToLayers(f).forEach(l => { items.addLayer(l); added.push(l); })); }
   finally { importing = false; }
+  applyZOrder();
   refresh();
   const b = L.latLngBounds([]);
   added.forEach(l => b.extend(l.getBounds ? l.getBounds() : l.getLatLng()));
@@ -2052,7 +2341,7 @@ function addFeatures(fc) {
 const kids = (el, n) => [...el.children].filter(c => c.localName === n);
 const kid = (el, n) => kids(el, n)[0];
 const txt = (el, n) => { const k = el && kid(el, n); return k ? k.textContent.trim() : ''; };
-const NUM = ['weight', 'opacity', 'fillOpacity', 'size', 'radius', 'cell'];
+const NUM = ['weight', 'opacity', 'fillOpacity', 'size', 'radius', 'cell', 'cols', 'z'];
 
 function kmlColor(hex, a = 1) {
   const h = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : '3b82f6';
@@ -2108,6 +2397,7 @@ function fromKML(doc) {
     else { p.color = st.lineColor; p.opacity = st.opacity; p.weight = st.weight; }
     const ed = kid(pm, 'ExtendedData');
     if (ed) kids(ed, 'Data').forEach(d => { const n = d.getAttribute('name'); if (n) p[n] = txt(d, 'value'); });
+    if (p._lbl) return; // ป้ายเลขกำกับช่องของสี่เหลี่ยมคอลัมน์ที่ฝังไว้ให้โปรแกรมอื่นเห็น ไม่ใช่วัตถุจริง ไม่นำเข้ากลับ (คำนวณใหม่จาก cols/dir อยู่แล้ว)
     NUM.forEach(k => { if (p[k] !== undefined) { p[k] = +p[k]; if (!isFinite(p[k])) delete p[k]; } });
     Object.keys(p).forEach(k => p[k] === undefined && delete p[k]);
     features.push({ type: 'Feature', properties: p, geometry });
@@ -2115,7 +2405,7 @@ function fromKML(doc) {
   return { type: 'FeatureCollection', features };
 }
 
-const X_EXT = ['kind', 'radius', 'center', 'weight', 'opacity', 'fillOpacity', 'dash', 'size', 'cell'];
+const X_EXT = ['kind', 'radius', 'center', 'weight', 'opacity', 'fillOpacity', 'dash', 'size', 'cell', 'cols', 'dir', 'z', 'locked', 'groupId'];
 function geomKML(g) {
   const c = a => a.map(p => `${p[0]},${p[1]},0`).join(' ');
   switch (g.type) {
@@ -2132,6 +2422,13 @@ function geomKML(g) {
   }
   return '';
 }
+// ประมาณจุดกึ่งกลางแต่ละคอลัมน์จากเส้นขอบ (4 มุม, พิกัดแบบ GeoJSON [lng,lat]) ด้วย bilinear — ใกล้เคียงพอสำหรับวางป้ายข้อความ
+function colCentersFromRing(ring, n) {
+  const c0 = ring[0], c1 = ring[1], c3 = ring[3];
+  const bilerp = (a, b) => [c0[0] + (c1[0] - c0[0]) * a + (c3[0] - c0[0]) * b, c0[1] + (c1[1] - c0[1]) * a + (c3[1] - c0[1]) * b];
+  const pts = []; for (let i = 0; i < n; i++) pts.push(bilerp((i + 0.5) / n, 0.5));
+  return pts;
+}
 function toKML(fc) {
   const pm = f => {
     const p = f.properties, g = f.geometry, text = p.kind === 'text';
@@ -2146,7 +2443,15 @@ function toKML(fc) {
       if (/Polygon/.test(g.type)) style += `<PolyStyle><color>${kmlColor(col, p.fillOpacity ?? 0.25)}</color><fill>${(p.fillOpacity ?? 0.25) > 0 ? 1 : 0}</fill><outline>1</outline></PolyStyle>`;
     }
     const ext = X_EXT.filter(k => p[k] !== undefined && p[k] !== '').map(k => `<Data name="${k}"><value>${esc(p[k])}</value></Data>`).join('');
-    return `<Placemark><name>${esc(p.name)}</name>${p.desc ? `<description>${esc(p.desc)}</description>` : ''}<Style>${style}</Style><ExtendedData>${ext}</ExtendedData>${geomKML(g)}</Placemark>`;
+    const main = `<Placemark><name>${esc(p.name)}</name>${p.desc ? `<description>${esc(p.desc)}</description>` : ''}<Style>${style}</Style><ExtendedData>${ext}</ExtendedData>${geomKML(g)}</Placemark>`;
+    if (p.kind !== 'colgrid' || g.type !== 'MultiLineString' || !g.coordinates[0]) return main;
+    // ฝังเลขกำกับช่องเป็น Placemark ข้อความจริง ให้เห็นเลขตอนเปิดด้วยโปรแกรมอื่น (Google Earth ฯลฯ) — มี _lbl กันไม่ให้นำเข้ากลับเป็นวัตถุซ้ำ
+    const n = Math.max(1, Math.round(+p.cols) || 10), rtl = p.dir === 'rtl';
+    const nums = colCentersFromRing(g.coordinates[0], n).map((c, i) => {
+      const num = rtl ? n - i : i + 1;
+      return `<Placemark><name>${num}</name><Style><IconStyle><scale>0</scale></IconStyle><LabelStyle><color>${kmlColor(col)}</color><scale>0.8</scale></LabelStyle></Style><ExtendedData><Data name="_lbl"><value>1</value></Data></ExtendedData><Point><coordinates>${c[0]},${c[1]},0</coordinates></Point></Placemark>`;
+    }).join('');
+    return `<Folder><name>${esc(p.name)}</name>${main}${nums}</Folder>`;
   };
   return `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>GIS Sketch</name>\n${fc.features.map(pm).join('\n')}\n</Document></kml>\n`;
 }
@@ -2373,12 +2678,73 @@ function rebuildGrid(l, cell) { // สร้างเส้นภายในใ
   if (g.adjusted) toast('ช่องเล็กเกินไปสำหรับกรอบนี้ — ปรับเป็น ' + fmtDist(g.cell));
   return g;
 }
-const fixGrid = l => { if (kindOf(l) === 'grid') rebuildGrid(l); };
+/* ── สี่เหลี่ยมคอลัมน์เป็นวัตถุ: ลากกรอบแล้วได้เส้นแบ่งเป็น N คอลัมน์เท่ากันเสมอ (ไม่ขึ้นกับระยะจริง) — ปรับจำนวนได้ที่แผงคุณสมบัติ ──
+   ต่างจากกริด: จำนวนคอลัมน์คงที่ตามที่ตั้งไว้ ความกว้างต่อช่องคำนวณใหม่ให้เท่ากันเสมอเมื่อย้าย/ย่อขยาย/หมุน */
+function colsFromUtm(c0, c1, c3, n, z, south) {
+  const ux = c1.E - c0.E, uy = c1.N - c0.N, vx = c3.E - c0.E, vy = c3.N - c0.N, W = Math.hypot(ux, uy), H = Math.hypot(vx, vy);
+  n = Math.max(1, Math.min(200, Math.round(+n) || 10));
+  const P = (a, b) => UTM.inv(c0.E + ux * a + vx * b, c0.N + uy * a + vy * b, z, south);
+  const lines = [[P(0, 0), P(1, 0), P(1, 1), P(0, 1), P(0, 0)]]; // เส้นขอบ
+  for (let i = 1; i < n; i++) lines.push([P(i / n, 0), P(i / n, 1)]); // เส้นแบ่งคอลัมน์ เต็มความสูง
+  return { lines, cols: n, W, H };
+}
+function colsFromLL(ll, n) { // ll = มุมกรอบ 4 มุมตามลำดับ (0,1,2,3)
+  const z = UTM.zone(ll[0].lng), south = ll[0].lat < 0, u = i => UTM.fwd(ll[i].lat, ll[i].lng, z);
+  return colsFromUtm(u(0), u(1), u(3), n, z, south);
+}
+function rebuildCols(l, n) { // สร้างเส้นแบ่งใหม่จากเส้นขอบปัจจุบัน (หลังย้าย/ย่อขยาย/หมุน/เปลี่ยนจำนวนคอลัมน์)
+  // ซูมออกเกินสเกล 50 ม. → แสดงแค่เส้นขอบ (ไม่วาดเส้นแบ่งคอลัมน์) กันรกตา เส้นแบ่งจริงยังคำนวณ/เก็บ cols ไว้ตามปกติ
+  const p = props(l), g = colsFromLL(gridRing(l), n ?? p.cols);
+  p.cols = g.cols; l.setLatLngs(scaleBarMeters() >= 50 ? [g.lines[0]] : g.lines);
+  return g;
+}
+const fixGrid = l => { const k = kindOf(l); if (k === 'grid') rebuildGrid(l); else if (k === 'colgrid') { rebuildCols(l); updateColLabels(l); } };
 const gridInfo = l => gridFromLL(gridRing(l), props(l).cell);
+const colsInfo = l => colsFromLL(gridRing(l), props(l).cols);
+/* ── เลขกำกับช่องของสี่เหลี่ยมคอลัมน์ (สำหรับวาดห้องแถว) — กึ่งกลางแต่ละช่อง นับซ้าย→ขวา หรือขวา→ซ้ายตามที่ตั้งไว้ ──
+   เก็บเป็นเลเยอร์แยกนอก items (ไม่ใช่วัตถุที่เลือก/ส่งออกได้ คำนวณสดจากกรอบ+จำนวนคอลัมน์เสมอ) */
+function colCenters(l) {
+  const ring = gridRing(l), n = Math.max(1, Math.round(+props(l).cols) || 10);
+  const z = UTM.zone(ring[0].lng), south = ring[0].lat < 0, u = i => UTM.fwd(ring[i].lat, ring[i].lng, z);
+  const c0 = u(0), c1 = u(1), c3 = u(3);
+  const ux = c1.E - c0.E, uy = c1.N - c0.N, vx = c3.E - c0.E, vy = c3.N - c0.N;
+  const P = (a, b) => UTM.inv(c0.E + ux * a + vx * b, c0.N + uy * a + vy * b, z, south);
+  const pts = []; for (let i = 0; i < n; i++) pts.push(P((i + 0.5) / n, 0.5));
+  return pts;
+}
+const colLabelIcon = (n, size) => L.divIcon({ className: 'col-num', iconSize: [0, 0], html: '<span style="font-size:' + (+size || 16) + 'px">' + n + '</span>' });
+// ระยะสเกลบนจอตอนนี้ (ม. ต่อ 100 พิกเซล ปัดเป็นเลขกลมแบบเดียวกับแถบสเกลของ Leaflet) — ใช้ตัดสินว่า "ซูมออกมาก" แค่ไหน
+function scaleBarMeters() {
+  const y = map.getSize().y / 2, m = map.distance(map.containerPointToLatLng([0, y]), map.containerPointToLatLng([100, y]));
+  if (!(m > 0)) return 0;
+  const pow10 = Math.pow(10, (Math.floor(m) + '').length - 1), d = m / pow10;
+  return pow10 * (d >= 10 ? 10 : d >= 5 ? 5 : d >= 3 ? 3 : d >= 2 ? 2 : 1);
+}
+const colLabelLayers = {}; // L.stamp(l) -> L.layerGroup ของป้ายเลข
+function updateColLabels(l) {
+  const id = L.stamp(l);
+  if (colLabelLayers[id]) colLabelLayers[id].clearLayers(); else colLabelLayers[id] = L.layerGroup().addTo(map);
+  if (kindOf(l) !== 'colgrid') return;
+  const sbm = scaleBarMeters();
+  if (sbm >= 50) return; // ซูมออกเกินสเกล 50 ม. → ซ่อนเลขไปเลย กันรกตา
+  const p = props(l), pts = colCenters(l), n = pts.length, rtl = p.dir === 'rtl', sz = sbm >= 20 ? 10 : (+p.size || 16); // 20–50 ม. → ย่อเหลือ 10
+  pts.forEach((ll, i) => L.marker(ll, { interactive: false, keyboard: false, pmIgnore: true, icon: colLabelIcon(rtl ? n - i : i + 1, sz) }).addTo(colLabelLayers[id]));
+}
+function refreshColLabelSizes() { items.eachLayer(l => { if (kindOf(l) === 'colgrid') { rebuildCols(l); updateColLabels(l); } }); }
+map.on('zoomend', refreshColLabelSizes);
+function removeColLabels(l) {
+  const id = L.stamp(l);
+  if (colLabelLayers[id]) { map.removeLayer(colLabelLayers[id]); delete colLabelLayers[id]; }
+}
 $('#f-cell').addEventListener('input', e => { const v = parseFloat(e.target.value); if (v > 0) patch({ cell: v }); });
 $('#f-cell').addEventListener('blur', () => syncInspector());
 $('#f-cell-chips').innerHTML = [50, 100, 200, 500, 1000].map(v => '<button data-v="' + v + '">' + (v >= 1000 ? v / 1000 + ' กม.' : v + ' ม.') + '</button>').join('');
 $('#f-cell-chips').addEventListener('click', e => { const b = e.target.closest('button'); if (b) patch({ cell: +b.dataset.v }); });
+$('#f-cols').addEventListener('input', e => { const v = Math.round(+e.target.value); if (v > 0) patch({ cols: v }); });
+$('#f-cols').addEventListener('blur', () => syncInspector());
+$('#f-cols-chips').innerHTML = [5, 8, 10, 12, 16].map(v => '<button data-v="' + v + '">' + v + '</button>').join('');
+$('#f-cols-chips').addEventListener('click', e => { const b = e.target.closest('button'); if (b) patch({ cols: +b.dataset.v }); });
+$('#f-dir').addEventListener('click', e => { const b = e.target.closest('button'); if (b) patch({ dir: b.dataset.v }); });
 
 /* ───── แถบช่วยตอนวาด: ลบจุดล่าสุด / เสร็จสิ้น / ยกเลิก ─────
    ลบจุดล่าสุด: ปุ่ม, Backspace, Ctrl/Cmd+Z หรือคลิกขวา (ไม่ลาก) · เสร็จสิ้น: ปุ่มหรือ Enter · ยกเลิก: Esc */
@@ -2435,45 +2801,57 @@ window.addEventListener('keydown', e => {
    Ctrl/Cmd+C · X · V (วางที่ตำแหน่งเมาส์ ถ้าไม่มีเมาส์วางกลางจอ; วางซ้ำจุดเดิมจะเยื้องออกทีละนิด)
    เมนูคลิกขวา / กดค้างบนจอสัมผัส: คัดลอก ตัด วางที่นี่ ทำสำเนา ลบ · ข้อมูลที่คัดลอกวางข้ามแท็บ/หน้าต่างได้ */
 let clip = null, lastMouse = null, lastPaste = { x: -99, y: -99, n: 0 }, lpAt = 0;
-const clipText = f => JSON.stringify({ 'gis-sketch': 1, feature: f });
-function setClip(l) {
-  clip = { feature: JSON.parse(JSON.stringify(layerToFeature(l))) };
-  try { navigator.clipboard?.writeText(clipText(clip.feature)).catch(() => {}); } catch { /* ไม่มีสิทธิ์ clipboard — ใช้ตัวแปรภายในแทน */ }
+const clipText = fs => JSON.stringify({ 'gis-sketch': 1, features: fs });
+function setClip(ls) {
+  clip = { features: ls.map(l => JSON.parse(JSON.stringify(layerToFeature(l)))) };
+  try { navigator.clipboard?.writeText(clipText(clip.features)).catch(() => {}); } catch { /* ไม่มีสิทธิ์ clipboard — ใช้ตัวแปรภายในแทน */ }
   updateClipUI();
 }
 function updateClipUI() { ['#a-paste', '#l-paste'].forEach(id => { const b = $(id); if (b) b.disabled = !clip; }); }
 function copySel(cut) {
   if (!sel) return false;
-  setClip(sel); toast(cut ? 'ตัดแล้ว — กด Ctrl+V หรือเมนู "วาง" เพื่อวาง' : 'คัดลอกแล้ว', 1800);
-  if (cut) remove(sel);
+  const ls = multi.size > 1 ? [...multi] : [sel];
+  if (cut && ls.some(l => props(l).locked)) { toast('มีวัตถุที่ถูกล็อกอยู่ — ปลดล็อกก่อนจึงจะตัดได้'); return false; }
+  setClip(ls);
+  toast(cut ? (ls.length > 1 ? `ตัดแล้ว ${ls.length} ชิ้น — กด Ctrl+V หรือเมนู "วาง" เพื่อวาง` : 'ตัดแล้ว — กด Ctrl+V หรือเมนู "วาง" เพื่อวาง') : (ls.length > 1 ? `คัดลอกแล้ว ${ls.length} ชิ้น` : 'คัดลอกแล้ว'), 1800);
+  if (cut) { if (ls.length > 1) removeMulti(); else remove(sel); }
   return true;
 }
-function pasteFeature(f, target) {
-  const ls = featureToLayers(JSON.parse(JSON.stringify(f))); if (!ls.length) return;
-  const l = ls[0], p = props(l);
-  p.name = copyName(p.name, kindOf(l));
-  // หาจุดกึ่งกลางของวัตถุบนหน้าจอ แล้วเลื่อนให้ไปอยู่ที่ target
-  let c;
-  if (l instanceof L.Marker || l instanceof L.Circle) c = map.latLngToContainerPoint(l.getLatLng());
-  else { const ps = flatPts(l.getLatLngs()).map(ll => map.latLngToContainerPoint(ll)); c = L.point((Math.min(...ps.map(q => q.x)) + Math.max(...ps.map(q => q.x))) / 2, (Math.min(...ps.map(q => q.y)) + Math.max(...ps.map(q => q.y))) / 2); }
+function pasteFeatures(fs, target) {
+  // ทั้งชุดที่วาง (กลุ่มเดิมมาด้วยกัน) ขยับไปด้วย dx/dy เดียวกัน รักษาตำแหน่งสัมพัทธ์ไว้ · กรุ๊ปเดิมได้ groupId ใหม่ เป็นกลุ่มอิสระจากต้นฉบับ
+  const built = fs.map(f => featureToLayers(JSON.parse(JSON.stringify(f)))).flat(); if (!built.length) return;
+  const centerOf = l => l instanceof L.Marker || l instanceof L.Circle ? map.latLngToContainerPoint(l.getLatLng())
+    : (() => { const ps = flatPts(l.getLatLngs()).map(ll => map.latLngToContainerPoint(ll)); return L.point((Math.min(...ps.map(q => q.x)) + Math.max(...ps.map(q => q.x))) / 2, (Math.min(...ps.map(q => q.y)) + Math.max(...ps.map(q => q.y))) / 2); })();
+  const centers = built.map(centerOf);
+  const cx = centers.reduce((s, p) => s + p.x, 0) / centers.length, cy = centers.reduce((s, p) => s + p.y, 0) / centers.length;
   if (Math.hypot(target.x - lastPaste.x, target.y - lastPaste.y) < 4) lastPaste.n++; else lastPaste = { x: target.x, y: target.y, n: 0 };
-  const dx = target.x - c.x + lastPaste.n * 14, dy = target.y - c.y + lastPaste.n * 14;
-  if (l instanceof L.Marker || l instanceof L.Circle) l.setLatLng(map.containerPointToLatLng(L.point(c.x + dx, c.y + dy)));
-  else applyPts(l, snapshot(l), q => L.point(q.x + dx, q.y + dy));
-  items.addLayer(l); select(l); save(); toast('วางแล้ว', 1200);
+  const dx = target.x - cx + lastPaste.n * 14, dy = target.y - cy + lastPaste.n * 14;
+  const gidMap = {};
+  built.forEach((l, i) => {
+    const p = props(l);
+    p.name = copyName(p.name, kindOf(l));
+    if (p.groupId) { if (!gidMap[p.groupId]) gidMap[p.groupId] = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); p.groupId = gidMap[p.groupId]; }
+    const c = centers[i];
+    if (l instanceof L.Marker || l instanceof L.Circle) l.setLatLng(map.containerPointToLatLng(L.point(c.x + dx, c.y + dy)));
+    else applyPts(l, snapshot(l), q => L.point(q.x + dx, q.y + dy));
+    items.addLayer(l);
+  });
+  if (built.length > 1) { multi.clear(); built.forEach(l => { multi.add(l); mark(l, true); }); sel = built.at(-1); syncInspector(); updateXform(); renderList(); armMarkers(); openPanel('props'); }
+  else select(built[0]);
+  save(); toast(built.length > 1 ? `วางแล้ว ${built.length} ชิ้น` : 'วางแล้ว', 1200);
 }
 const pasteTarget = () => lastMouse || map.getSize().divideBy(2);
-function pasteClip(target) { if (clip && state.mode === 'select') pasteFeature(clip.feature, target || pasteTarget()); }
+function pasteClip(target) { if (clip && state.mode === 'select') pasteFeatures(clip.features, target || pasteTarget()); }
 map.on('mousemove', e => { lastMouse = e.containerPoint; });
 map.on('mouseout', () => { lastMouse = null; });
 const typingNow = () => /^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName);
-document.addEventListener('copy', e => { if (typingNow() || !sel) return; e.preventDefault(); e.clipboardData.setData('text/plain', clipText(layerToFeature(sel))); copySel(false); });
-document.addEventListener('cut', e => { if (typingNow() || !sel) return; e.preventDefault(); e.clipboardData.setData('text/plain', clipText(layerToFeature(sel))); copySel(true); });
+document.addEventListener('copy', e => { if (typingNow() || !sel) return; e.preventDefault(); const ls = multi.size > 1 ? [...multi] : [sel]; e.clipboardData.setData('text/plain', clipText(ls.map(l => layerToFeature(l)))); copySel(false); });
+document.addEventListener('cut', e => { if (typingNow() || !sel) return; e.preventDefault(); const ls = multi.size > 1 ? [...multi] : [sel]; e.clipboardData.setData('text/plain', clipText(ls.map(l => layerToFeature(l)))); copySel(true); });
 document.addEventListener('paste', e => {
   if (typingNow()) return;
-  let f = null;
-  try { const o = JSON.parse(e.clipboardData.getData('text/plain')); if (o && o['gis-sketch'] && o.feature) f = o.feature; } catch { /* ไม่ใช่ข้อมูลของแอปนี้ */ }
-  if (f) { e.preventDefault(); clip = { feature: f }; updateClipUI(); if (state.mode === 'select') pasteFeature(f, pasteTarget()); }
+  let fs = null;
+  try { const o = JSON.parse(e.clipboardData.getData('text/plain')); if (o && o['gis-sketch'] && o.features) fs = o.features; } catch { /* ไม่ใช่ข้อมูลของแอปนี้ */ }
+  if (fs) { e.preventDefault(); clip = { features: fs }; updateClipUI(); if (state.mode === 'select') pasteFeatures(fs, pasteTarget()); }
   else if (clip) { e.preventDefault(); pasteClip(); }
 });
 $('#a-copy').onclick = () => copySel(false);
@@ -2485,10 +2863,10 @@ const ctx = $('#ctx');
 function hideCtx() { ctx.hidden = true; }
 function showCtx(pt, clientX, clientY) {
   if (drawActive() || state.mode !== 'select') return;
-  const rows = [];
-  if (sel) rows.push(['copy', 'คัดลอก', 'Ctrl+C'], ['cut', 'ตัด', 'Ctrl+X']);
+  const rows = [], n = multi.size > 1 ? multi.size : 0;
+  if (sel) rows.push(['copy', n ? `คัดลอก (${n})` : 'คัดลอก', 'Ctrl+C'], ['cut', n ? `ตัด (${n})` : 'ตัด', 'Ctrl+X']);
   if (clip) rows.push(['paste', 'วางที่นี่', 'Ctrl+V']);
-  if (sel) rows.push(['dup', 'ทำสำเนา', ''], ['del', 'ลบ', 'Del']);
+  if (sel) rows.push(['dup', 'ทำสำเนา', ''], ['front', 'เอาไว้หน้าสุด', ''], ['back', 'เอาไว้หลังสุด', ''], ['lock', props(sel).locked ? 'ปลดล็อก' : 'ล็อก', ''], ['del', 'ลบ', 'Del']);
   if (!rows.length) return;
   ctx.innerHTML = rows.map(([a, t, k]) => '<button data-a="' + a + '"' + (a === 'del' ? ' class="danger"' : '') + '><span>' + t + '</span><kbd>' + k + '</kbd></button>').join('');
   ctx._pt = pt; ctx.hidden = false;
@@ -2498,7 +2876,9 @@ function showCtx(pt, clientX, clientY) {
 ctx.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return; const a = b.dataset.a, pt = ctx._pt; hideCtx();
   if (a === 'copy') copySel(false); else if (a === 'cut') copySel(true);
-  else if (a === 'paste') pasteClip(pt); else if (a === 'dup') $('#a-dup').click(); else if (a === 'del' && sel) remove(sel);
+  else if (a === 'paste') pasteClip(pt); else if (a === 'dup') $('#a-dup').click();
+  else if (a === 'front') { if (sel) bringFront(sel); } else if (a === 'back') { if (sel) sendBack(sel); } else if (a === 'lock') { if (sel) toggleLock(sel); }
+  else if (a === 'del' && sel) remove(sel);
 });
 document.addEventListener('pointerdown', e => { if (!e.target.closest('#ctx')) hideCtx(); }, true);
 window.addEventListener('keydown', e => { if (e.key === 'Escape') hideCtx(); }, true);
@@ -2589,6 +2969,7 @@ function drawLabels() {
     add(dlLbl(midLL(ll[0], ll[1]), ['กว้าง ' + fmtLen(W.s) + ' · ' + fmtHdg(W.az)])); add(dlLbl(midLL(ll[1], ll[2]), ['สูง ' + fmtLen(H.s)]));
     const lines = ['พื้นที่ ' + areaText(W.s * H.s)];
     if (state.mode === 'grid') { const cell = +state.style.cell || 200; lines.unshift(Math.ceil(W.s / cell - 1e-9) + ' × ' + Math.ceil(H.s / cell - 1e-9) + ' ช่อง (ช่องละ ' + fmtLen(cell) + ')'); }
+    else if (state.mode === 'colgrid') { const n = Math.max(1, Math.round(+state.style.cols) || 10); lines.unshift(n + ' คอลัมน์ (กว้างช่องละ ' + fmtLen(W.s / n) + ')'); }
     add(dlLbl(cur, lines, 'live'));
     return;
   }
@@ -2695,12 +3076,33 @@ $('#a-straight').onclick = () => {
 
 /* เลือกหลายชิ้น (Shift+คลิก) + จัดตำแหน่ง */
 function toggleMulti(l) {
+  if (props(l).locked || (sel && props(sel).locked)) { toast('วัตถุถูกล็อกอยู่ — เลือกหลายชิ้นไม่ได้'); return; }
   if (!multi.size) multi.add(sel);
   if (multi.has(l)) { multi.delete(l); mark(l, false); } else { multi.add(l); mark(l, true); }
   if (multi.size <= 1) { const only = [...multi][0]; if (only) select(only); else select(null, false); return; }
   sel = [...multi].at(-1);
   syncInspector(); updateXform(); renderList(); armMarkers(); openPanel('props');
 }
+function selectGroup(gid, clicked) {
+  const ls = items.getLayers().filter(x => props(x).groupId === gid && !props(x).locked);
+  if (!ls.length) { select(clicked); return; }
+  multi.clear(); ls.forEach(x => { multi.add(x); mark(x, true); });
+  sel = clicked && multi.has(clicked) ? clicked : ls.at(-1);
+  syncInspector(); updateXform(); renderList(); armMarkers(); openPanel('props');
+}
+function groupSelection() {
+  if (multi.size < 2) return;
+  const gid = 'g_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  multi.forEach(l => { props(l).groupId = gid; });
+  syncInspector(); renderList(); save(); toast('รวมกลุ่มแล้ว (' + multi.size + ' ชิ้น)', 1400);
+}
+function ungroupSelection() {
+  if (!multi.size) return;
+  multi.forEach(l => { delete props(l).groupId; });
+  syncInspector(); renderList(); save(); toast('แยกกรุ๊ปแล้ว', 1400);
+}
+$('#mb-group').onclick = groupSelection;
+$('#mb-ungroup').onclick = ungroupSelection;
 const bboxAny = l => { if (l instanceof L.Marker) { const p = map.latLngToContainerPoint(l.getLatLng()); return { x0: p.x, y0: p.y, x1: p.x, y1: p.y }; } return bboxOf(l); };
 function moveBy(l, dx, dy) {
   if (l instanceof L.Marker || l instanceof L.Circle) { const p = map.latLngToContainerPoint(l.getLatLng()); l.setLatLng(map.containerPointToLatLng(L.point(p.x + dx, p.y + dy))); }
@@ -2726,7 +3128,12 @@ function alignMulti(mode) {
   }
   refresh(); toast('จัดตำแหน่งแล้ว', 1200);
 }
-function removeMulti() { const ls = [...multi]; select(null, false); ls.forEach(l => items.removeLayer(l)); refresh(); }
+function removeMulti() {
+  const ls = [...multi], locked = ls.filter(l => props(l).locked), ok = ls.filter(l => !props(l).locked);
+  select(null, false); ok.forEach(l => items.removeLayer(l));
+  if (locked.length) toast(locked.length + ' รายการถูกล็อกอยู่ ไม่ถูกลบ');
+  refresh();
+}
 $$('#multibox [data-al]').forEach(b => { b.onclick = () => alignMulti(b.dataset.al); });
 $('#mb-clear').onclick = () => select(null, false);
 $('#mb-del').onclick = removeMulti;
@@ -2743,6 +3150,9 @@ window.addEventListener('keydown', e => {
     e.preventDefault(); copySel(k === 'x'); // setClip เขียนลง clipboard ของระบบให้ด้วย
   } else if (k === 'v' && clip) { // ถ้าเบราว์เซอร์ส่ง paste event เองก็ไม่ต้องวางซ้ำ
     const t0 = Date.now(); setTimeout(() => { if (pasteEvtAt < t0) pasteClip(); }, 120);
+  } else if (k === 'd') { // Ctrl/Cmd+D = ทำสำเนาวัตถุที่เลือกทันที (เยื้องออกเล็กน้อย)
+    if (!sel) return;
+    e.preventDefault(); duplicateSelection();
   }
 }, true);
 
